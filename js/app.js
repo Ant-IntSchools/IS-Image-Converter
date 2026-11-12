@@ -1,4 +1,5 @@
 import { targetSize } from './resize.js';
+import { initViewer } from './viewer.js';
 
 /* ---------- Constants & helpers ---------- */
 
@@ -89,6 +90,7 @@ let items = [];
 let nextId = 1;
 let manualRun = false;
 let settings = readSettings();
+const viewer = initViewer({ getItems: () => items, formatBytes });
 
 /* ---------- Settings ---------- */
 
@@ -423,20 +425,16 @@ function renderItem(item) {
   }
   $('.status', el).textContent = STATUS_LABELS[item.status];
 
-  const view = $('[data-action="view"]', el);
   const dl = $('[data-action="download"]', el);
   if (item.status === 'done') {
-    view.href = item.output.url;
     dl.href = item.output.url;
     dl.download = item.outName;
-    view.removeAttribute('aria-disabled');
     dl.removeAttribute('aria-disabled');
   } else {
-    view.removeAttribute('href');
     dl.removeAttribute('href');
-    view.setAttribute('aria-disabled', 'true');
     dl.setAttribute('aria-disabled', 'true');
   }
+  viewer.refresh(item);
   updateToolbar();
 }
 
@@ -653,6 +651,7 @@ list.addEventListener('click', (e) => {
   if (!item) return;
   if (target.getAttribute('aria-disabled') === 'true') { e.preventDefault(); return; }
   switch (target.dataset.action) {
+    case 'view': viewer.open(item); break;
     case 'crop': openCrop(item); break;
     case 'remove': removeItem(item); break;
   }
